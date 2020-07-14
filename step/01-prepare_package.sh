@@ -190,6 +190,8 @@ wget -O package/lean/luci-app-jd-dailybonus/root/usr/share/jd-dailybonus/JD_Dail
 git clone https://github.com/lwz322/luci-app-frps.git package/lean/luci-app-frps
 git clone https://github.com/kuoruan/luci-app-frpc.git package/lean/luci-app-frpc
 svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/frp package/leanfrp
+svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/npc package/npc
+svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/luci-app-nps package/luci-app-nps
 #beardropper
 git clone https://github.com/NateLol/luci-app-beardropper package/luci-app-beardropper
 #trojan server
