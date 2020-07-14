@@ -218,7 +218,7 @@ svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/luci-app-syncdial
 #rm -rf feeds/luci/applications/luci-app-mwan3
 #svn co https://github.com/coolsnowwolf/luci/trunk/applications/luci-app-mwan3 feeds/luci/applications/luci-app-mwan3
 #svn co https://github.com/coolsnowwolf/packages/trunk/net/mwan3 feeds/packages/net/mwan3
-#svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/luci-app-mwan3helper package/lean/luci-app-mwan3helper
+svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/luci-app-mwan3helper package/lean/luci-app-mwan3helper
 #Zerotier
 git clone https://github.com/rufengsuixing/luci-app-zerotier package/lean/luci-app-zerotier
 svn co https://github.com/coolsnowwolf/packages/trunk/net/zerotier package/lean/zerotier
