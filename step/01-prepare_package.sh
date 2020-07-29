@@ -4,13 +4,13 @@ clear
 VersionDate=$(git show -s --date=short --format="%cd")
 echo "::set-env name=VersionDate::$VersionDate"
 echo "::set-env name=DATE::$(date "+%Y-%m-%d %H:%M:%S")"
-rm -f ./feeds.conf.default
-wget https://raw.githubusercontent.com/openwrt/openwrt/openwrt-19.07/feeds.conf.default
+#rm -f ./feeds.conf.default
+#wget https://raw.githubusercontent.com/openwrt/openwrt/openwrt-19.07/feeds.conf.default
 #remove annoying snapshot tag
-sed -i 's,SNAPSHOT,,g' include/version.mk
-sed -i 's,snapshots,,g' package/base-files/image-config.in
+#sed -i 's,SNAPSHOT,,g' include/version.mk
+#sed -i 's,snapshots,,g' package/base-files/image-config.in
 #scons patch
-wget -P include/ https://raw.githubusercontent.com/openwrt/openwrt/openwrt-19.07/include/scons.mk
+#wget -P include/ https://raw.githubusercontent.com/openwrt/openwrt/openwrt-19.07/include/scons.mk
 #更新feed
 ./scripts/feeds update -a && ./scripts/feeds install -a
 #O3
@@ -18,7 +18,6 @@ sed -i 's/Os/O3/g' include/target.mk
 sed -i 's/O2/O3/g' ./rules.mk
 #irqbalance
 sed -i 's/0/1/g' feeds/packages/utils/irqbalance/files/irqbalance.config
-cp -f ../patches/zzz-adjust_network package/base-files/files/etc/init.d/zzz-adjust_network
 #patch rk-crypto
 patch -p1 < ../patches/kernel_crypto-add-rk3328-crypto-support.patch
 #patch i2c0
@@ -28,14 +27,19 @@ rm -rf ./feeds/packages/net/miniupnpd
 svn co https://github.com/openwrt/packages/trunk/net/miniupnpd feeds/packages/net/miniupnpd
 svn co https://github.com/openwrt/packages/trunk/libs/libcap-ng feeds/packages/libs/libcap-ng
 cp ../PATCH/400-ipv6-disable.patch feeds/packages/net/miniupnpd/patches/
-#patch r8152 led
-#cp -f ../patches/991-r8152-Add-module-param-for-customized-LEDs.patch ./target/linux/rockchip/patches-5.4/991-r8152-Add-module-param-for-customized-LEDs.patch
+
+#patch config-5.4
+patch -p1 < ../patches/0001-target-linux-improve-friendlyarm-nanopi-r2s-support.patch
+
 #patch jsonc
 patch -p1 < ../patches/use_json_object_new_int64.patch
+
 #dnsmasq aaaa filter
 patch -p1 < ../patches/dnsmasq-add-filter-aaaa-option.patch
 patch -p1 < ../patches/luci-add-filter-aaaa-option.patch
 cp -f ../patches/900-add-filter-aaaa-option.patch ./package/network/services/dnsmasq/patches/900-add-filter-aaaa-option.patch
+
+
 #FullCone Patch
 git clone -b master --single-branch https://github.com/QiuSimons/openwrt-fullconenat package/fullconenat
 # Patch FireWall for fullcone
@@ -49,6 +53,7 @@ popd
 pushd target/linux/generic/hack-5.4
 wget https://raw.githubusercontent.com/coolsnowwolf/lede/master/target/linux/generic/hack-5.4/952-net-conntrack-events-support-multiple-registrant.patch
 popd
+
 #Patch FireWall for SFE
 patch -p1 < ../patches/luci-app-firewall_add_sfe_switch.patch
 # SFE kernel patch
@@ -82,14 +87,32 @@ CONFIG_CRYPTO_AES_ARM64_BS=y
 CONFIG_CRYPTO_ANSI_CPRNG=y
 CONFIG_CRYPTO_CMAC=y
 CONFIG_CRYPTO_ECB=y
+CONFIG_CRYPTO_GF128MUL=y
 CONFIG_CRYPTO_GHASH_ARM64_CE=y
+CONFIG_CRYPTO_HMAC=y
+CONFIG_CRYPTO_HW=y
+CONFIG_CRYPTO_JITTERENTROPY=y
+CONFIG_CRYPTO_LIB_DES=y
+CONFIG_CRYPTO_LIB_SHA256=y
 CONFIG_CRYPTO_MD5=y
+CONFIG_CRYPTO_NHPOLY1305=y
+CONFIG_CRYPTO_NHPOLY1305_NEON=y
+CONFIG_CRYPTO_NULL=y
+CONFIG_CRYPTO_POLY1305=y
+CONFIG_CRYPTO_RNG=y
+CONFIG_CRYPTO_RNG_DEFAULT=y
+CONFIG_CRYPTO_SEQIV=y
 CONFIG_CRYPTO_SHA1=y
 CONFIG_CRYPTO_SHA1_ARM64_CE=y
+CONFIG_CRYPTO_SHA256=y
+CONFIG_CRYPTO_SHA256_ARM64=y
 CONFIG_CRYPTO_SHA2_ARM64_CE=y
+CONFIG_CRYPTO_SHA3=y
+CONFIG_CRYPTO_SHA3_ARM64=y
 CONFIG_CRYPTO_SHA512=y
 CONFIG_CRYPTO_TWOFISH=y
 CONFIG_CRYPTO_USER_API_HASH=y
+CONFIG_CRYPTO_USER_API_RNG=y
 CONFIG_CRYPTO_USER_API_SKCIPHER=y
 CONFIG_CRYPTO_DEV_ROCKCHIP=y
 CONFIG_SND_SOC_ROCKCHIP=m
@@ -101,6 +124,9 @@ CONFIG_SND_SOC_ROCKCHIP_SPDIF=m
 #update new version GCC
 rm -rf ./feeds/packages/devel/gcc
 svn co https://github.com/openwrt/packages/trunk/devel/gcc feeds/packages/devel/gcc
+#update new version Golang
+rm -rf ./feeds/packages/lang/golang
+svn co https://github.com/openwrt/packages/trunk/lang/golang feeds/packages/lang/golang
 
 #Additional package
 #arpbind
@@ -129,8 +155,9 @@ git clone -b master --single-branch https://github.com/project-openwrt/luci-app-
 #svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/luci-app-adbyby-plus package/lean/luci-app-adbyby-plus
 #svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/adbyby package/lean/coremark/adbyby
 #gost
-svn co https://github.com/project-openwrt/openwrt/branches/openwrt-19.07/package/ctcgfw/gost package/ctcgfw/gost
-svn co https://github.com/project-openwrt/openwrt/branches/openwrt-19.07/package/ctcgfw/luci-app-gost package/ctcgfw/luci-app-gost
+svn co https://github.com/project-openwrt/openwrt/branches/master/package/ctcgfw/gost package/ctcgfw/gost
+#svn co https://github.com/project-openwrt/openwrt/branches/openwrt-19.07/package/ctcgfw/luci-app-gost package/ctcgfw/luci-app-gost
+svn co https://github.com/project-openwrt/openwrt/branches/master/package/ctcgfw/luci-app-gost package/ctcgfw/luci-app-gost
 #SSRP
 svn co https://github.com/fw876/helloworld/trunk/luci-app-ssr-plus package/lean/luci-app-ssr-plus
 rm -rf ./package/lean/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
@@ -204,14 +231,14 @@ git clone https://github.com/jerrykuku/luci-app-jd-dailybonus package/lean/luci-
 wget -O package/lean/luci-app-jd-dailybonus/root/usr/share/jd-dailybonus/JD_DailyBonus.js https://github.com/NobyDa/Script/raw/master/JD-DailyBonus/JD_DailyBonus.js
 #
 #frp
-rm -f ./feeds/luci/applications/luci-app-frps
-rm -f ./feeds/luci/applications/luci-app-frpc
-rm -rf ./feeds/packages/net/frp
-rm -f ./package/feeds/packages/frp
-git clone https://github.com/lwz322/luci-app-frps.git package/lean/luci-app-frps
-git clone https://github.com/kuoruan/luci-app-frpc.git package/lean/luci-app-frpc
-#svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/frp packages/lean/frp
-svn co https://github.com/openwrt/packages/trunk/net/frp package/feeds/packages/frp
+#rm -f ./feeds/luci/applications/luci-app-frps
+#rm -f ./feeds/luci/applications/luci-app-frpc
+#rm -rf ./feeds/packages/net/frp
+#rm -f ./package/feeds/packages/frp
+#git clone https://github.com/lwz322/luci-app-frps.git package/lean/luci-app-frps
+#git clone https://github.com/kuoruan/luci-app-frpc.git package/lean/luci-app-frpc
+#svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/frp package/feeds/packages/frp
+
 #onliner
 svn co https://github.com/project-openwrt/openwrt/branches/openwrt-19.07/package/ctcgfw/luci-app-onliner package/ctcgfw/luci-app-onliner
 #filetransfer
@@ -231,11 +258,11 @@ git clone https://github.com/NateLol/luci-app-beardropper package/luci-app-beard
 #trojan server
 svn co https://github.com/Lienol/openwrt-package/trunk/lienol/luci-app-trojan-server package/luci-app-trojan-server
 #transmission-web-control
-rm -rf ./feeds/packages/net/transmission*
-rm -rf ./feeds/luci/applications/luci-app-transmission/
-svn co https://github.com/coolsnowwolf/packages/trunk/net/transmission feeds/packages/net/transmission
-svn co https://github.com/coolsnowwolf/packages/trunk/net/transmission-web-control feeds/packages/net/transmission-web-control
-svn co https://github.com/coolsnowwolf/luci/trunk/applications/luci-app-transmission feeds/luci/applications/luci-app-transmission
+#rm -rf ./feeds/packages/net/transmission*
+#rm -rf ./feeds/luci/applications/luci-app-transmission/
+#svn co https://github.com/coolsnowwolf/packages/trunk/net/transmission feeds/packages/net/transmission
+#svn co https://github.com/coolsnowwolf/packages/trunk/net/transmission-web-control feeds/packages/net/transmission-web-control
+#svn co https://github.com/coolsnowwolf/luci/trunk/applications/luci-app-transmission feeds/luci/applications/luci-app-transmission
 #Dockerman
 #git clone https://github.com/lisaac/luci-app-dockerman.git package/lean/luci-app-dockerman
 #git clone https://github.com/lisaac/luci-lib-docker package/lean/luci-lib-docker
@@ -247,25 +274,21 @@ svn co https://github.com/coolsnowwolf/luci/trunk/applications/luci-app-transmis
 #svn co https://github.com/openwrt/packages/trunk/utils/runc package/lean/runc
 #svn co https://github.com/openwrt/packages/trunk/lang/golang package/lang/golang
 #multiwan support
-svn co https://github.com/project-openwrt/openwrt/branches/openwrt-19.07/package/lean/luci-app-syncdial package/lean/luci-app-syncdial
-rm -rf feeds/packages/net/mwan3
-rm -rf feeds/luci/applications/luci-app-mwan3
-svn co https://github.com/coolsnowwolf/luci/trunk/applications/luci-app-mwan3 feeds/luci/applications/luci-app-mwan3
-svn co https://github.com/coolsnowwolf/packages/trunk/net/mwan3 feeds/packages/net/mwan3
-svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/luci-app-mwan3helper package/lean/luci-app-mwan3helper
+svn co https://github.com/project-openwrt/openwrt/branches/master/package/lean/luci-app-syncdial package/lean/luci-app-syncdial
+#rm -rf feeds/packages/net/mwan3
+#rm -rf feeds/luci/applications/luci-app-mwan3
+#svn co https://github.com/coolsnowwolf/luci/trunk/applications/luci-app-mwan3 feeds/luci/applications/luci-app-mwan3
+#svn co https://github.com/coolsnowwolf/packages/trunk/net/mwan3 feeds/packages/net/mwan3
+#svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/luci-app-mwan3helper package/lean/luci-app-mwan3helper
 #Zerotier
-git clone https://github.com/rufengsuixing/luci-app-zerotier package/lean/luci-app-zerotier
-svn co https://github.com/coolsnowwolf/packages/trunk/net/zerotier package/lean/zerotier
+#git clone https://github.com/rufengsuixing/luci-app-zerotier package/lean/luci-app-zerotier
+svn co https://github.com/project-openwrt/openwrt/branches/master/package/lean/luci-app-zerotier package/lean/luci-app-zerotier
+#svn co https://github.com/coolsnowwolf/packages/trunk/net/zerotier package/lean/zerotier
 #OLED display
 git clone https://github.com/natelol/luci-app-oled package/natelol/luci-app-oled
-#fix zstd
-rm -rf ./feeds/packages/utils/zstd
-#svn co https://github.com/project-openwrt/packages/trunk/utils/zstd feeds/packages/utils/zstd
-svn co https://github.com/QiuSimons/Others/trunk/zstd feeds/packages/utils/zstd
-
 #CF811AC wifi driver
 #svn co https://github.com/project-openwrt/openwrt/branches/openwrt-18.06-dev/package/ctcgfw/rtl8821cu package/rtl8821cu
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/rtl8821cu package/ctcgfw/rtl8821cu
+#svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/rtl8821cu package/ctcgfw/rtl8821cu
 #mkdir package/base-files/files/etc/hotplug.d/usb
 #wget -P package/base-files/files/etc/hotplug.d/usb https://github.com/friendlyarm/friendlywrt/raw/master-v19.07.1/package/base-files/files/etc/hotplug.d/usb/31-usb_wifi
 #
@@ -278,7 +301,7 @@ wget -O package/lean/lean-translate/files/zzz-default-settings https://github.co
 #生成默认配置及缓存
 rm -rf .config
 #修正架构
-sed -i "s,boardinfo.system,'ARMv8',g" feeds/luci/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js
+#sed -i "s,boardinfo.system,'ARMv8',g" feeds/luci/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js
 chmod -R 755 ./
 
 exit 0
