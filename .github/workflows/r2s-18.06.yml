@@ -5,29 +5,29 @@
 # For NanoPi R2S org
 #=================================================
 
-name: OpenWrt R2S origin-full
+name: OpenWrt R2S-18.06
 
-#on:
+on:
 #  release:
 #    types: published
-#  push:
-#    branches:
-#      - master
-#    paths:
-#      - '.github/workflows/origin-full.yml'
-#      - 'step/01-prepare_package.sh'
-#      - 'seed/origin-full.seed'
-#   schedule:
-#    - cron: 35 20 * * *
-#  watch:
-#    types: started
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/r2s-18.06.yml'
+      - 'step/18.06.sh'
+      - 'seed/18.06.seed'
+  schedule:
+    - cron: 35 20 * * *
+  watch:
+    types: started
 
 env:
   SSH_ACTIONS: false
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: false
   UPLOAD_RELEASE: true
-  CONFIG_FILE: origin-full.seed
+  CONFIG_FILE: 18.06.seed
   TZ: Asia/Shanghai
 
 jobs:
@@ -64,23 +64,19 @@ jobs:
           git config --global user.email "actions@github.com"
       - name: Install OpenWrt source
         run: |
-          git clone https://git.openwrt.org/openwrt/openwrt.git
+          git clone --branch "18.06-kernel5.4" --single-branch "https://github.com/project-openwrt/openwrt" "openwrt"
 
       - name: Prepare openwrt package
         run: |
           cd openwrt
           cp -r ../step/* ./
-          /bin/bash 01-prepare_package.sh
-
-      - name: Convert Translation
-        run: |
-          cd openwrt
-          /bin/bash 02-convert_translation.sh
+          /bin/bash 18.06.sh
 
       - name: Remove Upx
         run: |
           cd openwrt
           /bin/bash 03-remove_upx.sh
+
       - name: Load Config
         run: |
           cd openwrt
@@ -92,13 +88,12 @@ jobs:
           cd openwrt
           let make_process=$(nproc)+1
           make toolchain/install -j${make_process} V=s
-          df -h
       - name: Compile Openwrt
         run: |
           cd openwrt
           let make_process=$(nproc)+1
           make -j${make_process} V=s || make -j${make_process} V=s
-          df -h
+
       - name: Organize files
         id: organize
         run: |
@@ -108,18 +103,18 @@ jobs:
           cd ./artifact/
           gzip -d *.gz && exit 0
           gzip *.img
-          zip R2S-full-$(date +%Y-%m-%d)-squashfs.zip *squashfs*
-          zip R2S-full-$(date +%Y-%m-%d)-ext4.zip *ext4*
+          zip R2S-18.06-$(date +%Y-%m-%d)-squashfs.zip *squashfs*
+          zip R2S-18.06-$(date +%Y-%m-%d)-ext4.zip *ext4*
           echo "::set-env name=FIRMWARE::$PWD"
           echo "::set-output name=status::success"
-          release_tag="R2S-origin-full ${{ env.DATE }}"
+          release_tag="R2S-18.06 ${{ env.DATE }}"
           echo "##[set-output name=Release_tag;]$release_tag"
           cd ../openwrt
-          cp .config ../artifact/config-origin-full
-          ./scripts/diffconfig.sh > ../artifact/config-full.seed
+          cp .config ../artifact/18.06.config
+          ./scripts/diffconfig.sh > ../artifact/18.06.seed
         
       - name: Upload artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@main
         if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
         with:
           name: OpenWrt_R2S_origin_firmware
@@ -137,4 +132,4 @@ jobs:
           replacesArtifacts: true
           token: ${{ secrets.RELEASES_TOKEN }}
           bodyFile: "body-origin.md"
-          artifacts: ${{ env.FIRMWARE }}/*.zip,${{ env.FIRMWARE }}/config*
+          artifacts: ${{ env.FIRMWARE }}/*.zip,${{ env.FIRMWARE }}/18.06*
